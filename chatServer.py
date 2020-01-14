@@ -1,11 +1,16 @@
-import socket
+import socketserver
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind((socket.gethostname(), 1234))
-s.listen(5)
+class myTcpHandler(socketserver.BaseRequestHandler):
+    def handle(self):
+        while True:
+            self.data = self.request.recv(1024).strip()
+            if not self.data:
+                break
+            print("{} wrote:".format(self.client_address[0]))
+            print(self.data)
+            self.request.send(self.data.upper())
 
-while True:
-    clientsocket, address = s.accept()
-    print(f"Connection from {address} established!")
-    clientsocket.send(bytes("Welcome to the server!", "utf-8"))
-    clientsocket.close()
+if __name__ == "__main__":
+    HOST, PORT = "localhost", 8080
+    with socketserver.TCPServer((HOST, PORT), myTcpHandler) as server:
+        server.serve_forever()
